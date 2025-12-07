@@ -1,0 +1,590 @@
+{
+  "name": "Lulu",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-dense-index",
+          "mode": "list",
+          "cachedResultName": "n8n-dense-index"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        -960
+      ],
+      "id": "9fe408c6-49d8-4bef-92d9-e6027985c9e1",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "r9zfUiNVNgV21ahc",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        -320
+      ],
+      "id": "b448fd1e-30b6-4781-a8df-1f341bc48962",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "1CTlit2ZhYbdceMh",
+          "name": "Assistente-GPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        -64
+      ],
+      "id": "3c01228e-f979-4e72-a26c-d72db79a5530",
+      "name": "When chat message received",
+      "webhookId": "30328376-a9e3-4f11-b1eb-2bbaadbea688"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"body.message\"] ?? $json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "Você é um Assistente Virtual de Varejo chamado VarejIA.\nSeu objetivo é ajudar clientes e colaboradores com informações de produtos, compras, pedidos, estoque, horários de loja e pós-venda.\nMantenha um tom humano, simpático, direto e objetivo.\n\nNUNCA invente:\n- preços\n- estoques\n- prazos\n- dados internos da empresa\n\nSe não souber uma informação, diga: \"Não tenho essa informação agora, mas posso ajudar de outra forma.\"\n\nFormato das respostas:\n▶️ Entregar a resposta direta primeiro.\n📌 No final, faça uma pergunta curta para dar sequência.\n\nFunções que você deve executar:\n- Consultar e descrever produtos\n- Comparar modelos\n- Orientar sobre trocas e garantia\n- Informar horários e serviços de loja\n- Solicitar dados (quando necessário) para localizar pedidos\n- Sugerir produtos semelhantes quando não encontrar o que foi pedido\n\nSempre peça apenas as informações essenciais para continuar.\n\nEvite respostas longas.\nEvite jargões técnicos.\nNão faça suposições arriscadas.\n\nReconheça intenções e, se necessário, retorne-as em formato de tag como <intencao> {json}.\n\nQuando precisar buscar informações no banco vetorial, use a ferramenta \"Pinecone Vector Store Tool\".\nSempre consulte o Pinecone antes de afirmar que não sabe algo.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -128
+      ],
+      "id": "e506f0c7-d90f-49a6-a601-2de03050b515",
+      "name": "AI Agent",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Contém dados de produtos, vendedores e vendas da empresa.\nUse esta ferramenta para buscar informações sobre produtos, categorias, preços, vendedores, pedidos e vendas historicamente registradas.\n",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-dense-index",
+          "mode": "list",
+          "cachedResultName": "n8n-dense-index"
+        },
+        "topK": 20,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        320
+      ],
+      "id": "e50e6cb5-0277-4378-a9ff-a8323430658e",
+      "name": "Pinecone Vector Store Tool",
+      "credentials": {
+        "pineconeApi": {
+          "id": "r9zfUiNVNgV21ahc",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "![Pinecone logo](https://www.pinecone.io/images/pinecone-logo-for-n8n-templates.png)\n\n\n## Try it out\n\nThis n8n workflow template lets you chat with Pinecone release notes files downloaded via HTTP using OpenAI and Pinecone vector database. It retrieves relevant context from your data in a Pinecone index in real time so you can get accurate, context-aware answers about your proprietary data—without the need to train your own LLM.\n\n#### What is Pinecone vector database?\n[Pinecone vector database](https://docs.pinecone.io/guides/get-started/overview) indexes and stores vector embeddings for fast retrieval and searching for semantically similar data (semantic search over a dense index) or matching words or phrases (lexical or keyword search over a sparse index), or both (over a hybrid index). This template uses a dense Pinecone index for semantic search.\n\n#### Not interested in chunking and embedding your own data or figuring out which search method to use?\n\nTry our n8n quickstart for Pinecone Assistant [here](https://docs.pinecone.io/guides/assistant/quickstart#n8n) or check out the full workflow to chat with your Google Drive documents [here](https://n8n.io/workflows/9942-rag-powered-document-chat-with-google-drive-openai-and-pinecone-assistant/).\n\n### Prerequisites\n* A [Pinecone account](https://app.pinecone.io/) and [API key](https://app.pinecone.io/organizations/-/projects/-/keys)\n* An [Open AI account](https://auth.openai.com/create-account) and [API key](https://platform.openai.com/settings/organization/api-keys)\n\n### Setup\n1. Create a Pinecone index in the Pinecone Console [here](https://app.pinecone.io/organizations/-/projects/-/indexes) \n\t1. Name your index `n8n-dense-index`\n\t2. Select OpenAI's `text-embedding-3-small`\n\t3. Set the Dimension to `1536`\n\t4. Leave everything else as default\n\t5. If you use a different index name, update the related nodes to reflect this change\n2. Setup Pinecone API key credential in n8n\n\t1. In the Pinecone Vector Store node -> Credential to connect with, select Create new credential\n\t2. Paste in your Pinecone API key in the API Key field\n\t3. Name this credential  `Pinecone` so that other nodes reference it\n3. Setup the Open AI credential in n8n\n\t1. In the OpenAI Chat Model node -> Credential to connect with, select Create new credential\n\t2. Set the API Key field to your OpenAI API key\n4. Activate the workflow or test it with a manual execution to ingest the documents\n5. Chat with the Pinecone release notes!\n\n### Ideas for customizing this workflow\n- Use your own data\n\t- Change the urls in Set file urls node to use your own files.\n\t- You may need to adjust the chunk sizes in the Recursive Character Text Splitter node or use a different chunking strategy. You want chunks that are big enough to contain meaningful information but not so big that the meaning is diluted or it can't fit within the context window of the embedding model. Refer to our [article about chunking strategies](https://www.pinecone.io/learn/chunking-strategies/) for more info.\n\t- Customize the System Message of the AI Agent node to reflect what the Pinecone Vector Store Tool will be used for. Be sure to include info on what data can be retrieved using that tool.\n\t- Customize the Description of the Pinecone Vector Store Tool to reflect what data you are storing in the Pinecone index.\n- Use n8n, Pinecone Assistant, and OpenAI to [chat with your Google Drive documents](https://n8n.io/workflows/9942-rag-powered-document-chat-with-google-drive-openai-and-pinecone-assistant/).\n\n### Need help?\nYou can find help by asking in the [Pinecone Discord community](https://discord.gg/tJ8V62S3sH), asking on the [Pinecone Forum](https://community.pinecone.io/), or [filing an issue](https://github.com/pinecone-io/n8n-templates/issues/new/choose) on this repo.",
+        "height": 1504,
+        "width": 636
+      },
+      "id": "28774583-8986-4f17-a3f9-8ca6a6574a1b",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1008,
+        -1088
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Process new files, embed, and upsert to Pinecone index",
+        "height": 672,
+        "width": 1744,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -192,
+        -1040
+      ],
+      "typeVersion": 1,
+      "id": "eaf56ec9-a919-42ab-b5aa-7c686469d82b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Chat with your docs",
+        "height": 640,
+        "width": 1744,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -192,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "91a85aa0-ced7-4edb-a066-0739f5b22746",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -736
+      ],
+      "id": "0231651c-1ddf-4bed-893a-0e445e7c9967",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0e724df-685f-4661-b2ec-3cdd3c2ba0f1",
+              "name": "urls",
+              "value": "[\"https://raw.githubusercontent.com/brunaluiza1711-ui/lulu/main/2_Base_de_dados_de_Produto_1.csv\",\n\"https://raw.githubusercontent.com/brunaluiza1711-ui/lulu/main/2_Base_de_dados_de_Produto_2.csv\",\n\"https://raw.githubusercontent.com/brunaluiza1711-ui/lulu/main/3_Base_de_dados_de_Vendedor.csv\",\n\"https://raw.githubusercontent.com/brunaluiza1711-ui/lulu/main/4_Base_de_dados_de_Vendas.csv\"]\n",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        -576
+      ],
+      "id": "225b41b8-442a-4e44-840b-ed6cc869b8f1",
+      "name": "Set file urls"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -576
+      ],
+      "id": "67ab454d-ba8e-4673-b257-6c4c933cbdfa",
+      "name": "Split to list"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        -576
+      ],
+      "id": "215e0783-24b9-4d03-b497-b000658ca000",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urls }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        -576
+      ],
+      "id": "96b2685f-2aac-4df5-a314-65aa2f47ea2e",
+      "name": "Download file"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "=Pergunta: {{ $json.pergunta }}\nResposta: {{ $json.resposta }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "categoria",
+                "value": "={{ $json.categoria }}"
+              },
+              {
+                "name": "=nomeArquivo",
+                "value": "={{ $json.nomeArquivo }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        -736
+      ],
+      "id": "daa5503f-d711-4990-88c2-e0ae88e6fa43",
+      "name": "Default data loader"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o4-mini",
+          "mode": "list",
+          "cachedResultName": "o4-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        304
+      ],
+      "id": "2a00f4a1-fe5c-4953-b702-70b15abbdfc9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "1CTlit2ZhYbdceMh",
+          "name": "Assistente-GPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lulu",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -128,
+        128
+      ],
+      "id": "8242f435-1cfa-49f0-9cbe-def01ce07600",
+      "name": "Webhook",
+      "webhookId": "649c5c70-8fd8-4b3a-9e6e-ce2d3d3144bb"
+    },
+    {
+      "parameters": {
+        "toolDescription": "=Esta ferramenta contém informações sobre produtos, vendedores e vendas da empresa, \nincluindo categorias, preços, quantidades vendidas, valores totais, desempenho por \nvendedor e métricas anuais.\n\nUse esta ferramenta sempre que o usuário fizer perguntas relacionadas a:\n- produtos (detalhes, preços, categorias)\n- vendedores (vendas totais, produtos mais vendidos)\n- vendas (por período, região, vendedor)\n- análises históricas\n- ranking de produtos ou serviços\n- consultas sobre Serviços Tecnológicos ou ano de 2025\n\nA ferramenta realiza busca semântica no banco vetorial e retorna trechos relevantes\npara responder a pergunta. Nunca invente dados — responda somente com base no\nconteúdo retornado por esta ferramenta.\n",
+        "text": "=A seguir está a pergunta do usuário:\n\n\"{{ $json[\"body.message\"] ?? $json[\"chatInput\"] }}\"\n\nSua tarefa:\n\n1. Interprete a intenção principal da pergunta.\n2. Verifique se a resposta depende de dados armazenados no banco vetorial \n   (produtos, vendedores, vendas, categorias, análises históricas, ranking de serviços tecnológicos etc).\n3. Se depender, acione obrigatoriamente a ferramenta “Pinecone Vector Store Tool”.\n4. Aguarde o retorno da ferramenta e responda SOMENTE com base no conteúdo obtido.\n5. Se a ferramenta não retornar nada, diga:\n   “Não encontrei essa informação no banco vetorial. Pode tentar reformular a consulta?”\n6. Formate a resposta sempre assim:\n   ▶️ Resposta direta  \n   📌 Pergunta curta no final para continuar a conversa\n7. Nunca invente dados nem peça arquivos ao usuário.\n8. Mantenha tom simpático, direto e objetivo.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        112
+      ],
+      "id": "3f9ce2b1-422d-46d4-84f9-07438e016fa5",
+      "name": "AI Agent Tool",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "rtf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -656
+      ],
+      "id": "8ee4a246-4b8c-46bc-add6-d26cb1b35f7d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "rtf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -576
+      ],
+      "id": "67f0cfdd-2dc4-491e-b6a4-3f37d3498d85",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Rx_hzNDdwWfubbQVkRyXbmMYVJ4b3XxsKxIo9WwETLY",
+          "mode": "list",
+          "cachedResultName": "rag_basico",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Rx_hzNDdwWfubbQVkRyXbmMYVJ4b3XxsKxIo9WwETLY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1360659988,
+          "mode": "list",
+          "cachedResultName": "basico",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Rx_hzNDdwWfubbQVkRyXbmMYVJ4b3XxsKxIo9WwETLY/edit#gid=1360659988"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        -960
+      ],
+      "id": "a5809a2f-42dd-41e1-b422-008840af9f20",
+      "name": "2 - Base de dados de Produto",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TSs6RSkLgHvr15Di",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        64
+      ],
+      "id": "b89bd0ac-f757-4076-9489-0dcfbfe191d9",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Pinecone Vector Store Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "2 - Base de dados de Produto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set file urls": {
+      "main": [
+        [
+          {
+            "node": "Split to list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split to list": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default data loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default data loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        []
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        []
+      ]
+    },
+    "2 - Base de dados de Produto": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "61b4d011-c6c7-462b-818a-0fd0c66410df",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "740cc4e78f3d6cc053680b12da30868b6450436ccf638e46d898842692ffa934"
+  },
+  "id": "8P366kdCraqg0vIS",
+  "tags": []
+}
